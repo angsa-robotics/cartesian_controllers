@@ -47,6 +47,7 @@
 
 #include <controller_interface/controller_interface.hpp>
 #include <functional>
+#include <std_msgs/msg/string.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <geometry_msgs/msg/wrench_stamped.hpp>
@@ -248,6 +249,10 @@ private:
   // Dynamic parameters
   double m_error_scale;
   std::string m_robot_description;
+
+  // Define a subscriber and a callback to get robot description from robot_state_publisher
+  void robot_description_callback(const std_msgs::msg::String::SharedPtr robot_description);
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_robot_description_subscription;
 };
 
 }  // namespace cartesian_controller_base

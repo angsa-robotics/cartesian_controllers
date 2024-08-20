@@ -104,6 +104,13 @@ CartesianControllerBase::on_init()
     auto_declare<bool>("solver.publish_state_feedback", false);
     m_initialized = true;
   }
+  m_robot_description_subscription = get_node()->create_subscription<std_msgs::msg::String>(
+    "/robot_description", rclcpp::QoS(1).transient_local(),
+    std::bind(&CartesianControllerBase::robot_description_callback, this, std::placeholders::_1)
+  );
+  RCLCPP_INFO(
+    get_node()->get_logger(), "Subscribing to '%s' topic for robot description.",
+    m_robot_description_subscription->get_topic_name());
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -134,6 +141,21 @@ controller_interface::return_type CartesianControllerBase::init(const std::strin
   return controller_interface::return_type::OK;
 }
 #endif
+
+
+void CartesianControllerBase::robot_description_callback(const std_msgs::msg::String::SharedPtr robot_description)
+{
+  RCLCPP_INFO(get_node()->get_logger(), "Received robot description from topic /robot_description; saving it...");
+
+  try {
+    std::vector<rclcpp::Parameter> all_new_parameters{rclcpp::Parameter("robot_description", robot_description->data)};
+    get_node()->set_parameters(all_new_parameters);
+  }
+  catch (std::runtime_error & e)
+  {
+    RCLCPP_ERROR_STREAM(get_node()->get_logger(), "Error in handling published robot URDF:" << e.what());
+  }
+};
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 CartesianControllerBase::on_configure(const rclcpp_lifecycle::State & previous_state)
@@ -327,6 +349,11 @@ CartesianControllerBase::on_activate(const rclcpp_lifecycle::State & previous_st
                  m_joint_names.size(), hardware_interface::HW_IF_POSITION,
                  m_joint_state_pos_handles.size());
     return CallbackReturn::ERROR;
+  }
+  // print m_joint_state_pos_handles
+  for (size_t i = 0; i < m_joint_state_pos_handles.size(); ++i)
+  {
+    RCLCPP_INFO(get_node()->get_logger(), "m_joint_state_pos_handles[%d]: %f", i, m_joint_state_pos_handles[i].get().get_value());
   }
 
   // Copy joint state to internal simulation
