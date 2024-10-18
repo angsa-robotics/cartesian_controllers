@@ -350,11 +350,6 @@ CartesianControllerBase::on_activate(const rclcpp_lifecycle::State & previous_st
                  m_joint_state_pos_handles.size());
     return CallbackReturn::ERROR;
   }
-  // print m_joint_state_pos_handles
-  for (size_t i = 0; i < m_joint_state_pos_handles.size(); ++i)
-  {
-    RCLCPP_INFO(get_node()->get_logger(), "m_joint_state_pos_handles[%d]: %f", i, m_joint_state_pos_handles[i].get().get_value());
-  }
 
   // Copy joint state to internal simulation
   if (!m_ik_solver->setStartState(m_joint_state_pos_handles))
